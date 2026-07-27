@@ -1,84 +1,34 @@
-# File: variables.tf
-variable "region" {
-  default = "us-west-2"
+# File: outputs.tf
+output "vpc_id" {
+  value = aws_vpc.main.id
 }
 
-variable "vpc_cidr" {
-  default = "10.0.0.0/16"
+output "subnet_id" {
+  value = aws_subnet.main.id
 }
 
-variable "subnet_cidr" {
-  default = "10.0.1.0/24"
+output "ecs_cluster_name" {
+  value = aws_ecs_cluster.main.name
 }
 
-variable "availability_zone" {
-  default = "us-west-2a"
+output "ecs_task_definition_arn" {
+  value = aws_ecs_task_definition.main.arn
 }
 
-variable "cluster_name" {
-  default = "main"
+output "rds_instance_endpoint" {
+  value = aws_db_instance.main.endpoint
 }
 
-variable "task_definition_name" {
-  default = "main"
+output "rds_instance_username" {
+  value = aws_db_instance.main.username
+  sensitive = false
 }
 
-variable "task_cpu" {
-  default = 256
-}
-
-variable "task_memory" {
-  default = 512
-}
-
-variable "container_name" {
-  default = "main"
-}
-
-variable "container_image" {
-  default = "nginx:latest"
-}
-
-variable "container_port" {
-  default = 80
-}
-
-variable "ecs_task_execution_role_name" {
-  default = "ecs-task-execution"
-}
-
-variable "rds_allocated_storage" {
-  default = 20
-}
-
-variable "rds_engine" {
-  default = "postgres"
-}
-
-variable "rds_instance_class" {
-  default = "db.t2.micro"
-}
-
-variable "rds_db_name" {
-  default = "main"
-}
-
-variable "rds_username" {
-  default = "postgres"
-}
-
-variable "rds_password" {
+output "rds_instance_password" {
+  value     = aws_db_instance.main.password
   sensitive = true
 }
 
-variable "rds_port" {
-  default = 5432
-}
-
-variable "rds_security_group_name" {
-  default = "rds"
-}
-
-variable "s3_bucket_name" {
-  default = "main"
+output "s3_bucket_name" {
+  value = aws_s3_bucket.main.bucket
 }
