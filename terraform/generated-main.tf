@@ -1,98 +1,84 @@
-# File: main.tf
-provider "aws" {
-  region = var.region
+# File: variables.tf
+variable "region" {
+  default = "us-west-2"
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.subnet_cidr
-  availability_zone = var.availability_zone
+variable "subnet_cidr" {
+  default = "10.0.1.0/24"
 }
 
-resource "aws_ecs_cluster" "main" {
-  name = var.cluster_name
+variable "availability_zone" {
+  default = "us-west-2a"
 }
 
-resource "aws_ecs_task_definition" "main" {
-  family                = var.task_definition_name
-  cpu                    = var.task_cpu
-  memory                 = var.task_memory
-  network_mode           = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  execution_role_arn      = aws_iam_role.ecs_task_execution.arn
-  container_definitions = jsonencode([
-    {
-      name          = var.container_name
-      image         = var.container_image
-      portMappings = [
-        {
-          containerPort = var.container_port
-          hostPort       = var.container_port
-        }
-      ]
-    }
-  ])
+variable "cluster_name" {
+  default = "main"
 }
 
-resource "aws_iam_role" "ecs_task_execution" {
-  name        = var.ecs_task_execution_role_name
-  description = "ECS Task Execution Role"
-
-  assume_role_policy = jsonencode(
-    {
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = "sts:AssumeRole"
-          Principal = {
-            Service = "ecs-tasks.amazonaws.com"
-          }
-          Effect = "Allow"
-        }
-      ]
-    }
-  )
+variable "task_definition_name" {
+  default = "main"
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
-  role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+variable "task_cpu" {
+  default = 256
 }
 
-resource "aws_db_instance" "main" {
-  allocated_storage    = var.rds_allocated_storage
-  engine               = var.rds_engine
-  instance_class       = var.rds_instance_class
-  name                 = var.rds_db_name
-  username             = var.rds_username
-  password             = var.rds_password
-  vpc_security_group_ids = [
-    aws_security_group.rds.id
-  ]
+variable "task_memory" {
+  default = 512
 }
 
-resource "aws_security_group" "rds" {
-  name        = var.rds_security_group_name
-  description = "RDS Security Group"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = var.rds_port
-    to_port     = var.rds_port
-    protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block]
-  }
+variable "container_name" {
+  default = "main"
 }
 
-resource "aws_s3_bucket" "main" {
-  bucket = var.s3_bucket_name
-  acl    = "private"
+variable "container_image" {
+  default = "nginx:latest"
+}
 
-  versioning {
-    enabled = true
-  }
+variable "container_port" {
+  default = 80
+}
+
+variable "ecs_task_execution_role_name" {
+  default = "ecs-task-execution"
+}
+
+variable "rds_allocated_storage" {
+  default = 20
+}
+
+variable "rds_engine" {
+  default = "postgres"
+}
+
+variable "rds_instance_class" {
+  default = "db.t2.micro"
+}
+
+variable "rds_db_name" {
+  default = "main"
+}
+
+variable "rds_username" {
+  default = "postgres"
+}
+
+variable "rds_password" {
+  sensitive = true
+}
+
+variable "rds_port" {
+  default = 5432
+}
+
+variable "rds_security_group_name" {
+  default = "rds"
+}
+
+variable "s3_bucket_name" {
+  default = "main"
 }
