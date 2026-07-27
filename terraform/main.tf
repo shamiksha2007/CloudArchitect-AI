@@ -1,1 +1,98 @@
-\n# Configure the AWS Provider\nprovider "aws" {\n  region = var.region\n}\n\n# Create VPC\nresource "aws_vpc" "gdvcxz_vpc" {\n  cidr_block = var.vpc_cidr\n}\n\n# Create Subnet\nresource "aws_subnet" "gdvcxz_subnet" {\n  cidr_block = var.subnet_cidr\n  vpc_id     = aws_vpc.gdvcxz_vpc.id\n  availability_zone = var.availability_zone\n}\n\n# Create ECS Cluster\nresource "aws_ecs_cluster" "gdvcxz_ecs_cluster" {\n  name = var.ecs_cluster_name\n}\n\n# Create ECS Service\nresource "aws_ecs_service" "gdvcxz_ecs_service" {\n  name            = var.ecs_service_name\n  cluster         = aws_ecs_cluster.gdvcxz_ecs_cluster.id\n  task_definition = aws_ecs_task_definition.gdvcxz_ecs_task_definition.arn\n  desired_count   = var.desired_count\n}\n\n# Create RDS PostgreSQL Database\nresource "aws_db_instance" "gdvcxz_rds" {\n  identifier           = var.rds_identifier\n  engine               = "postgres"\n  instance_class       = var.rds_instance_class\n  allocated_storage    = var.rds_allocated_storage\n  username             = var.rds_username\n  password             = var.rds_password\n  vpc_security_group_ids = [aws_security_group.gdvcxz_rds_sg.id]\n  publicly_accessible  = false\n}\n\n# Create RDS Security Group\nresource "aws_security_group" "gdvcxz_rds_sg" {\n  name        = var.rds_sg_name\n  description = var.rds_sg_description\n  vpc_id      = aws_vpc.gdvcxz_vpc.id\n\n  ingress {\n    from_port   = 5432\n    to_port     = 5432\n    protocol    = "tcp"\n    cidr_blocks = [var.rds_ingress_cidr]\n  }\n}\n\n# Create S3 Bucket\nresource "aws_s3_bucket" "gdvcxz_s3_bucket" {\n  bucket = var.s3_bucket_name\n  acl    = "private"\n}\n\n# Create CloudFront Distribution\nresource "aws_cloudfront_distribution" "gdvcxz_cloudfront_distribution" {\n  origin {\n    domain_name = aws_s3_bucket.gdvcxz_s3_bucket.bucket_regional_domain_name\n    origin_id   = var.cloudfront_origin_id\n  }\n}\n\n# Create IAM Role for ECS\nresource "aws_iam_role" "gdvcxz_ecs_role" {\n  name        = var.ecs_role_name\n  description = var.ecs_role_description\n\n  assume_role_policy = <<EOF\n{\n  "Version": "2012-10-17",\n  "Statement": [\n    {\n      "Action": "sts:AssumeRole",\n      "Principal": {\n        "Service": "ecs-tasks.amazonaws.com"\n      },\n      "Effect": "Allow",\n      "Sid": ""\n    }\n  ]\n}\nEOF\n}\n}\n\n# Create IAM Policy for ECS\nresource "aws_iam_policy" "gdvcxz_ecs_policy" {\n  name        = var.ecs_policy_name\n  description = var.ecs_policy_description\n\n  policy = <<EOF\n{\n  "Version": "2012-10-17",\n  "Statement": [\n    {\n      "Action": [\n        "logs:CreateLogGroup",\n        "logs:CreateLogStream",\n        "logs:PutLogEvents"\n      ],\n      "Resource": '*',\n      "Effect": "Allow"\n    }\n  ]\n}\nEOF\n}\n}\n\n# Create IAM Policy Attachment for ECS\nresource "aws_iam_policy_attachment" "gdvcxz_ecs_policy_attachment" {\n  name       = var.ecs_policy_attachment_name\n  roles      = [aws_iam_role.gdvcxz_ecs_role.name]\n  policy_arn = aws_iam_policy.gdvcxz_ecs_policy.arn\n}\n
+# File: main.tf
+provider "aws" {
+  region = var.region
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = var.vpc_cidr
+}
+
+resource "aws_subnet" "main" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.subnet_cidr
+  availability_zone = var.availability_zone
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = var.cluster_name
+}
+
+resource "aws_ecs_task_definition" "main" {
+  family                = var.task_definition_name
+  cpu                    = var.task_cpu
+  memory                 = var.task_memory
+  network_mode           = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  execution_role_arn      = aws_iam_role.ecs_task_execution.arn
+  container_definitions = jsonencode([
+    {
+      name          = var.container_name
+      image         = var.container_image
+      portMappings = [
+        {
+          containerPort = var.container_port
+          hostPort       = var.container_port
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_iam_role" "ecs_task_execution" {
+  name        = var.ecs_task_execution_role_name
+  description = "ECS Task Execution Role"
+
+  assume_role_policy = jsonencode(
+    {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = "sts:AssumeRole"
+          Principal = {
+            Service = "ecs-tasks.amazonaws.com"
+          }
+          Effect = "Allow"
+        }
+      ]
+    }
+  )
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_db_instance" "main" {
+  allocated_storage    = var.rds_allocated_storage
+  engine               = var.rds_engine
+  instance_class       = var.rds_instance_class
+  name                 = var.rds_db_name
+  username             = var.rds_username
+  password             = var.rds_password
+  vpc_security_group_ids = [
+    aws_security_group.rds.id
+  ]
+}
+
+resource "aws_security_group" "rds" {
+  name        = var.rds_security_group_name
+  description = "RDS Security Group"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = var.rds_port
+    to_port     = var.rds_port
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+}
+
+resource "aws_s3_bucket" "main" {
+  bucket = var.s3_bucket_name
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+}
