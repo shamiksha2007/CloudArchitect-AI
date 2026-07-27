@@ -67,7 +67,7 @@ resource "aws_db_instance" "main" {
   allocated_storage    = var.rds_allocated_storage
   engine               = var.rds_engine
   instance_class       = var.rds_instance_class
-  name                 = var.rds_db_name
+  db_name              = var.rds_db_name
   username             = var.rds_username
   password             = var.rds_password
   vpc_security_group_ids = [
