@@ -68,6 +68,7 @@ variable "rds_username" {
 }
 
 variable "rds_password" {
+  default   = "TempPassword123!"
   sensitive = true
 }
 
