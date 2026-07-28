@@ -13,6 +13,17 @@ resource "aws_subnet" "main" {
   availability_zone = var.availability_zone
 }
 
+resource "aws_subnet" "secondary" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.second_subnet_cidr
+  availability_zone = var.second_availability_zone
+}
+
+resource "aws_db_subnet_group" "main" {
+  name       = "main-db-subnet-group"
+  subnet_ids = [aws_subnet.main.id, aws_subnet.secondary.id]
+}
+
 resource "aws_ecs_cluster" "main" {
   name = var.cluster_name
 }
