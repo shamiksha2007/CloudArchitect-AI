@@ -1,6 +1,6 @@
 # File: variables.tf
 variable "region" {
-  default = "us-west-2"
+  default = "ap-south-1"
 }
 
 variable "vpc_cidr" {
@@ -12,7 +12,7 @@ variable "subnet_cidr" {
 }
 
 variable "availability_zone" {
-  default = "us-west-2a"
+  default = "ap-south-1a"
 }
 
 variable "cluster_name" {
