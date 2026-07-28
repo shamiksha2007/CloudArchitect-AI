@@ -1,13 +1,11 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "ap-south-1"
 }
-
 data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]
 }
-
 resource "aws_instance" "example" {
-  ami           = var.ami
-  instance_type = var.instance_type
+  ami           = data.aws_ami.example.id
+  instance_type = "t2.micro"
 }
