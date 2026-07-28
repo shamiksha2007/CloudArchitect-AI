@@ -28,3 +28,9 @@ jobs:
         run: |
           cd terraform
           terraform plan
+      - name: Terraform Plan
+        env:
+          TF_VAR_rds_password: ${{ secrets.RDS_PASSWORD }}
+        run: |
+          cd terraform
+          terraform plan
