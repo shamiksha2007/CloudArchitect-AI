@@ -56,7 +56,7 @@ variable "rds_engine" {
 }
 
 variable "rds_instance_class" {
-  default = "db.t2.micro"
+  default = "db.t3.micro"
 }
 
 variable "rds_db_name" {
@@ -80,5 +80,5 @@ variable "rds_security_group_name" {
 }
 
 variable "s3_bucket_name" {
-  default = "main"
+  default = "cloudarchitect-ai-main-513816987431"
 }
