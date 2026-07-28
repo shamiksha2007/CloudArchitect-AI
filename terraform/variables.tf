@@ -82,3 +82,11 @@ variable "rds_security_group_name" {
 variable "s3_bucket_name" {
   default = "cloudarchitect-ai-main-513816987431"
 }
+
+variable "second_subnet_cidr" {
+  default = "10.0.2.0/24"
+}
+
+variable "second_availability_zone" {
+  default = "ap-south-1b"
+}
